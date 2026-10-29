@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import {
   Activity, ArrowRight, BarChart3, Bell, Check, ChevronDown, Clock3, Database, Download, Dumbbell,
@@ -12,6 +12,7 @@ import { exercises, muscles, type Exercise, type Muscle } from './exercises';
 
 type View = 'overview' | 'workouts' | 'history' | 'evolution' | 'settings';
 type Log = { exercise: string; weight: number; reps: number; sets: number; date: string };
+type AppNotification = { id: string; title: string; message: string; date: string; read: boolean };
 
 const navItems = [
   { id: 'overview' as View, label: 'Visão geral', Icon: House },
@@ -36,13 +37,38 @@ export default function Home() {
   const [query, setQuery] = useState('');
   const [toast, setToast] = useState('');
   const [mobileNav, setMobileNav] = useState(false);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [nativePermission, setNativePermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notificationsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLoggedIn(localStorage.getItem('atlas-session') === 'active');
     const stored = localStorage.getItem('atlas-logs');
     if (stored) setLogs(JSON.parse(stored));
     setDark(localStorage.getItem('atlas-theme') === 'dark');
+    const storedNotifications = localStorage.getItem('atlas-notifications');
+    if (storedNotifications) setNotifications(JSON.parse(storedNotifications));
+    setNotificationsEnabled(localStorage.getItem('atlas-notifications-enabled') !== 'false');
+    setNativePermission('Notification' in window ? Notification.permission : 'unsupported');
   }, []);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) setNotificationsOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setNotificationsOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [notificationsOpen]);
 
   function toggleTheme() {
     setDark((value) => { const next = !value; localStorage.setItem('atlas-theme', next ? 'dark' : 'light'); return next; });
@@ -54,7 +80,59 @@ export default function Home() {
     const data = new FormData(event.currentTarget);
     const log: Log = { exercise: active.name, weight: Number(data.get('weight')), reps: Number(data.get('reps')), sets: Number(data.get('sets')), date: new Date().toISOString() };
     const next = [log, ...logs]; setLogs(next); localStorage.setItem('atlas-logs', JSON.stringify(next));
+    addNotification('Treino registrado', `${active.name} foi adicionado ao seu histórico.`);
     setActive(null); setToast('Treino registrado com sucesso'); setTimeout(() => setToast(''), 2800);
+  }
+
+  function addNotification(title: string, message: string) {
+    if (!notificationsEnabled) return;
+    const notification: AppNotification = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, title, message, date: new Date().toISOString(), read: false };
+    const next = [notification, ...notifications].slice(0, 30);
+    setNotifications(next);
+    localStorage.setItem('atlas-notifications', JSON.stringify(next));
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try { new Notification(title, { body: message }); } catch { /* Browser notification delivery is optional. */ }
+    }
+  }
+
+  function markNotificationRead(id: string) {
+    const next = notifications.map((notification) => notification.id === id ? { ...notification, read: true } : notification);
+    setNotifications(next);
+    localStorage.setItem('atlas-notifications', JSON.stringify(next));
+    setNotificationsOpen(false);
+    setView('history');
+  }
+
+  function markAllNotificationsRead() {
+    const next = notifications.map((notification) => ({ ...notification, read: true }));
+    setNotifications(next);
+    localStorage.setItem('atlas-notifications', JSON.stringify(next));
+  }
+
+  function clearNotifications() {
+    setNotifications([]);
+    localStorage.removeItem('atlas-notifications');
+  }
+
+  function toggleNotifications() {
+    setNotificationsEnabled((enabled) => {
+      const next = !enabled;
+      localStorage.setItem('atlas-notifications-enabled', String(next));
+      return next;
+    });
+  }
+
+  async function requestNativePermission() {
+    if (!('Notification' in window)) {
+      setNativePermission('unsupported');
+      return;
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      setNativePermission(permission);
+    } catch {
+      setNativePermission('unsupported');
+    }
   }
 
   function clearLogs() {
@@ -82,14 +160,14 @@ export default function Home() {
       <header className="topbar">
         <button className="mobile-menu" onClick={() => setMobileNav(true)} aria-label="Abrir menu"><Menu size={21} /></button>
         <div className="crumb">QUINTA, 24 DE OUTUBRO <span>/</span> {crumbLabels[view]}</div>
-        <div className="actions"><button className="icon-button" onClick={toggleTheme} aria-label="Alternar tema">{dark ? <Sun size={19} /> : <Moon size={19} />}</button><button className="icon-button notification"><Bell size={19} /><i /></button><div className="avatar">AS</div></div>
+        <div className="actions"><button className="icon-button" onClick={toggleTheme} aria-label="Alternar tema">{dark ? <Sun size={19} /> : <Moon size={19} />}</button><div className="notification-anchor" ref={notificationsRef}><button className="icon-button notification" onClick={() => setNotificationsOpen((open) => !open)} aria-label={`Notificações${notifications.some((notification) => !notification.read) ? `: ${notifications.filter((notification) => !notification.read).length} não lidas` : ''}`} aria-expanded={notificationsOpen}><Bell size={19} />{notifications.some((notification) => !notification.read) && <span className="notification-count">{notifications.filter((notification) => !notification.read).length}</span>}</button>{notificationsOpen && <NotificationsPanel notifications={notifications} onRead={markNotificationRead} onReadAll={markAllNotificationsRead} onClear={clearNotifications} onClose={() => setNotificationsOpen(false)} />}</div><div className="avatar">AS</div></div>
       </header>
       <div className="main-scroll" id="top">
         {view === 'overview' && <Overview selected={selected} onSelect={setSelected} query={query} onQuery={setQuery} visible={visible} onVideo={setVideoExercise} onRegister={setActive} onSeeAll={() => navigate('workouts')} />}
         {view === 'workouts' && <WorkoutScreen logs={logs} onRegister={setActive} onVideo={setVideoExercise} />}
         {view === 'history' && <HistoryScreen logs={logs} />}
         {view === 'evolution' && <EvolutionScreen logs={logs} />}
-        {view === 'settings' && <SettingsScreen dark={dark} onToggleTheme={toggleTheme} logs={logs} onClearLogs={clearLogs} />}
+        {view === 'settings' && <SettingsScreen dark={dark} onToggleTheme={toggleTheme} logs={logs} onClearLogs={clearLogs} notificationsEnabled={notificationsEnabled} onToggleNotifications={toggleNotifications} nativePermission={nativePermission} onRequestNativePermission={requestNativePermission} />}
       </div>
     </section>
     {active && <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setActive(null)}><div className="modal"><button className="close" onClick={() => setActive(null)}><X size={18} /></button><p className="eyebrow">REGISTRAR SÉRIE</p><h2>{active.name}</h2><p className="modal-sub">Sua última carga foi <strong>{active.last}</strong>. Como foi hoje?</p><form onSubmit={saveLog}><div className="form-row"><label>Carga (kg)<input name="weight" type="number" step="0.5" defaultValue={Number.parseInt(active.last) || 0} required /></label><label>Repetições<input name="reps" type="number" defaultValue={10} required /></label></div><label>Séries<input name="sets" type="number" defaultValue={active.sets} required /></label><button className="submit-button" type="submit">Salvar registro <Check size={17} /></button></form></div></div>}
@@ -100,6 +178,17 @@ export default function Home() {
 
 function NavList({ view, navigate }: { view: View; navigate: (view: View) => void }) {
   return <>{navItems.map(({ id, label, Icon }) => <button key={id} className={view === id ? 'nav-active' : ''} onClick={() => navigate(id)}><Icon size={18} /> {label}</button>)}</>;
+}
+
+function NotificationsPanel({ notifications, onRead, onReadAll, onClear, onClose }: { notifications: AppNotification[]; onRead: (id: string) => void; onReadAll: () => void; onClear: () => void; onClose: () => void }) {
+  const unreadCount = notifications.filter((notification) => !notification.read).length;
+  return <section className="notifications-panel" aria-label="Central de notificações">
+    <header className="notifications-panel-header"><div><strong>Notificações</strong><small>{unreadCount ? `${unreadCount} não lida${unreadCount === 1 ? '' : 's'}` : 'Tudo em dia'}</small></div><button className="notifications-close" onClick={onClose} aria-label="Fechar notificações"><X size={17} /></button></header>
+    {notifications.length ? <>
+      <div className="notifications-list">{notifications.map((notification) => <button key={notification.id} className={`notification-item ${notification.read ? 'read' : 'unread'}`} onClick={() => onRead(notification.id)}><span className="notification-mark"><Dumbbell size={15} /></span><span className="notification-copy"><strong>{notification.title}</strong><small>{notification.message}</small><time dateTime={notification.date}>{new Date(notification.date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</time></span>{!notification.read && <i aria-label="Não lida" />}</button>)}</div>
+      <footer className="notifications-panel-footer">{unreadCount > 0 && <button onClick={onReadAll}>Marcar todas como lidas</button>}<button onClick={onClear}>Limpar</button></footer>
+    </> : <div className="notifications-empty"><span><Bell size={19} /></span><strong>Sem notificações por enquanto</strong><p>Quando você registrar um treino, o aviso aparecerá aqui.</p></div>}
+  </section>;
 }
 
 function Overview({ selected, onSelect, query, onQuery, visible, onVideo, onRegister, onSeeAll }: { selected: Muscle; onSelect: (muscle: Muscle) => void; query: string; onQuery: (query: string) => void; visible: Exercise[]; onVideo: (exercise: Exercise) => void; onRegister: (exercise: Exercise) => void; onSeeAll: () => void }) {
@@ -206,7 +295,7 @@ function EvolutionScreen({ logs }: { logs: Log[] }) {
   </>;
 }
 
-function SettingsScreen({ dark, onToggleTheme, logs, onClearLogs }: { dark: boolean; onToggleTheme: () => void; logs: Log[]; onClearLogs: () => void }) {
+function SettingsScreen({ dark, onToggleTheme, logs, onClearLogs, notificationsEnabled, onToggleNotifications, nativePermission, onRequestNativePermission }: { dark: boolean; onToggleTheme: () => void; logs: Log[]; onClearLogs: () => void; notificationsEnabled: boolean; onToggleNotifications: () => void; nativePermission: NotificationPermission | 'unsupported'; onRequestNativePermission: () => Promise<void> }) {
   const [confirmClear, setConfirmClear] = useState(false);
   const [notice, setNotice] = useState('');
 
@@ -252,6 +341,14 @@ function SettingsScreen({ dark, onToggleTheme, logs, onClearLogs }: { dark: bool
     <section className="settings-section">
       <div className="settings-section-heading"><span className="settings-section-icon"><UserRound size={18} /></span><div><h2>Conta</h2><p>Informações do acesso atual.</p></div></div>
       <div className="settings-card account-card"><div className="avatar">AS</div><div className="account-details"><strong>Alex Silva</strong><small>teste@atlas.app</small></div><span className="account-badge">Plano gratuito</span></div>
+    </section>
+
+    <section className="settings-section">
+      <div className="settings-section-heading"><span className="settings-section-icon"><Bell size={18} /></span><div><h2>Notificações</h2><p>Receba avisos quando registrar um treino.</p></div></div>
+      <div className="settings-card notification-settings-card">
+        <div className="notification-setting-row"><div><strong>Avisos dentro do Atlas</strong><small>Mostra novos avisos na central do sino.</small></div><button className={`preference-switch ${notificationsEnabled ? 'enabled' : ''}`} role="switch" aria-checked={notificationsEnabled} onClick={onToggleNotifications}><span /></button></div>
+        <div className="notification-setting-row browser-notification-row"><div><strong>Notificações do navegador</strong><small>{nativePermission === 'granted' ? 'Permitidas neste navegador.' : nativePermission === 'denied' ? 'Bloqueadas nas permissões do navegador.' : nativePermission === 'unsupported' ? 'Este navegador não oferece notificações.' : 'Exibe avisos do sistema enquanto o Atlas estiver aberto.'}</small></div><button className="settings-action-button" onClick={onRequestNativePermission} disabled={!notificationsEnabled || nativePermission === 'granted' || nativePermission === 'denied' || nativePermission === 'unsupported'}>{nativePermission === 'granted' ? 'Ativadas' : nativePermission === 'denied' ? 'Bloqueadas' : nativePermission === 'unsupported' ? 'Indisponível' : 'Permitir'}</button></div>
+      </div>
     </section>
 
     <section className="settings-section">

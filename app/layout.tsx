@@ -3,6 +3,7 @@ import './globals.css';
 import './machine.css';
 import './settings.css';
 import './dark.css';
+import './notifications.css';
 
 export const metadata: Metadata = {
   title: 'Atlas | Seu treino, no seu ritmo',
