@@ -98,7 +98,8 @@
 .app.dark .primary-small,
 .app.dark .mini-button.primary,
 .app.dark .mini-button.primary:hover,
-.app.dark .evolution-hero {
+.app.dark .evolution-hero,
+.app.dark .program-register-button {
   color: #241510;
 }
 
