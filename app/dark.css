@@ -1,0 +1,247 @@
+/* Single dark palette shared by every screen. */
+.app.dark {
+  color-scheme: dark;
+  --bg: #0e141b;
+  --surface: #171f28;
+  --sidebar: #121a22;
+  --surface-raised: #202b36;
+  --ink: #f1f5f9;
+  --muted: #b4c0cc;
+  --line: #34414e;
+  --accent: #ff9877;
+  --accent-soft: #3a2924;
+  --success: #8ce0b1;
+  --success-soft: #1d382d;
+  --danger: #ffaaa2;
+  --danger-bg: #74332f;
+  --shadow: 0 14px 38px rgba(0, 0, 0, .32);
+}
+
+.app.dark .sidebar,
+.app.dark .mobile-drawer,
+.app.dark .topbar,
+.app.dark .main-scroll {
+  background-color: var(--bg);
+  color: var(--ink);
+}
+
+.app.dark .sidebar,
+.app.dark .topbar {
+  border-color: var(--line);
+}
+
+.app.dark .sidebar {
+  background-color: var(--sidebar);
+}
+
+.app.dark .mobile-drawer {
+  background-color: var(--sidebar);
+}
+
+.app.dark h1,
+.app.dark h2,
+.app.dark h3,
+.app.dark strong,
+.app.dark b,
+.app.dark label,
+.app.dark .crumb,
+.app.dark .exercise-body p,
+.app.dark .exercise-info small,
+.app.dark .exercise-load small,
+.app.dark .last small,
+.app.dark .mini-profile small,
+.app.dark .settings-intro,
+.app.dark .settings-footnote {
+  color: var(--ink);
+}
+
+.app.dark .crumb,
+.app.dark .exercise-body p,
+.app.dark .exercise-info small,
+.app.dark .exercise-load small,
+.app.dark .last small,
+.app.dark .mini-profile small,
+.app.dark .settings-intro,
+.app.dark .settings-footnote,
+.app.dark .settings-section-heading p,
+.app.dark .settings-card small,
+.app.dark .data-summary > p,
+.app.dark .clear-confirm,
+.app.dark .video-caption small,
+.app.dark .video-instructions li {
+  color: var(--muted);
+}
+
+.app.dark .eyebrow {
+  color: var(--muted);
+}
+
+.app.dark .positive,
+.app.dark .status-good {
+  color: var(--success) !important;
+}
+
+.app.dark .toast {
+  color: #dff9eb;
+  background: var(--success-soft);
+  border: 1px solid #2c5744;
+}
+
+.app.dark .avatar {
+  color: #ffd3c3;
+  background: #49332e;
+}
+
+.app.dark .brand-mark,
+.app.dark .start-button,
+.app.dark .submit-button,
+.app.dark .primary-small,
+.app.dark .mini-button.primary,
+.app.dark .mini-button.primary:hover,
+.app.dark .evolution-hero {
+  color: #241510;
+}
+
+.app.dark .peach .muscle-icon {
+  color: #ffb49b;
+  background: #432e28;
+}
+
+.app.dark .blue .muscle-icon {
+  color: #9bceff;
+  background: #26394b;
+}
+
+.app.dark .violet .muscle-icon {
+  color: #c7b5ff;
+  background: #352e4b;
+}
+
+.app.dark .gold .muscle-icon {
+  color: #ffda83;
+  background: #44391f;
+}
+
+.app.dark .mint .muscle-icon {
+  color: #91e3c7;
+  background: #203c35;
+}
+
+.app.dark .rose .muscle-icon {
+  color: #ffb2c6;
+  background: #482d36;
+}
+
+.app.dark .muscle-card.selected,
+.app.dark .muscle-card:hover {
+  background: #1c2630;
+  border-color: var(--accent);
+}
+
+.app.dark .search,
+.app.dark .workout-chips button,
+.app.dark .count-badge,
+.app.dark .insights-panel,
+.app.dark .history-screen,
+.app.dark .history-table,
+.app.dark .progress-card,
+.app.dark .settings-card,
+.app.dark .theme-options,
+.app.dark .cancel-delete,
+.app.dark .settings-action-button {
+  color: var(--ink);
+  background-color: var(--surface);
+  border-color: var(--line);
+}
+
+.app.dark input,
+.app.dark textarea,
+.app.dark select {
+  color: var(--ink);
+  background-color: var(--surface);
+  border-color: var(--line);
+}
+
+.app.dark input::placeholder,
+.app.dark textarea::placeholder {
+  color: #9eabb8;
+  opacity: 1;
+}
+
+.app.dark .search svg,
+.app.dark .icon-button,
+.app.dark .mini-button {
+  color: var(--muted);
+}
+
+.app.dark .search:focus-within,
+.app.dark input:focus,
+.app.dark textarea:focus,
+.app.dark select:focus {
+  border-color: var(--accent);
+  outline-color: var(--accent);
+}
+
+.app.dark .nav-active,
+.app.dark nav button.nav-active,
+.app.dark .settings-link.selected,
+.app.dark .settings-link:hover,
+.app.dark .workout-chips button.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.app.dark .settings-section-heading,
+.app.dark .settings-card,
+.app.dark .settings-section-icon,
+.app.dark .settings-action-button,
+.app.dark .theme-options button {
+  color: var(--ink);
+}
+
+.app.dark .settings-section-icon,
+.app.dark .account-badge {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.app.dark .theme-options {
+  background: var(--bg);
+}
+
+.app.dark .theme-options button {
+  color: var(--muted);
+}
+
+.app.dark .theme-options button.active {
+  color: var(--ink);
+  background: var(--surface-raised);
+  border-color: #526170;
+}
+
+.app.dark .settings-action-button.danger {
+  color: var(--danger);
+}
+
+.app.dark .confirm-delete {
+  color: #fff;
+  background: var(--danger-bg);
+  border-color: var(--danger-bg);
+}
+
+.app.dark .settings-notice {
+  color: var(--success);
+}
+
+.app.dark .video-frame {
+  background: #090d12;
+}
+
+.app.dark .video-loading {
+  color: #e1e8ef;
+}
+
+.app.dark :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
