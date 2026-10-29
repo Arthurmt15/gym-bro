@@ -83,6 +83,17 @@
   color: var(--accent);
 }
 
+.program-title-nowrap {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: clamp(26px, 7.7vw, 39px);
+  letter-spacing: -1.5px;
+}
+
+.program-eyebrow-nowrap {
+  white-space: nowrap;
+}
+
 .plan-muscle-switcher {
   display: flex;
   gap: 7px;

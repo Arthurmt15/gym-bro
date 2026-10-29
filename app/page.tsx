@@ -280,7 +280,7 @@ function WorkoutScreen({ initialMuscle, logs, onSelectMuscle, onBack, onRegister
 
   return <>
     <button className="plan-back-button" onClick={onBack}><ArrowLeft size={16} /> Grupos musculares</button>
-    <PageHeader eyebrow="TREINO PREDEFINIDO" title={<>Treino de<br /><em>{muscle.toLowerCase()}.</em></>} />
+    <PageHeader eyebrow={<span className="program-eyebrow-nowrap">TREINO PREDEFINIDO</span>} title={<span className="program-title-nowrap">Treino de <em>{muscle.toLowerCase()}.</em></span>} />
     <div className="plan-muscle-switcher" aria-label="Selecionar treino programado">{muscles.map((item) => <button key={item.name} className={muscle === item.name ? 'active' : ''} onClick={() => selectMuscle(item.name)}><span>{item.icon}</span>{item.name}</button>)}</div>
     <div className="program-heading"><div><p className="eyebrow">SEQUÊNCIA PROGRAMADA</p><h2>Faça na ordem indicada</h2><small>As últimas cargas registradas aparecem em cada exercício.</small></div><span className="count-badge">{plan.length} exercícios</span></div>
     <div className="program-exercise-list">{plan.map((exercise, index) => <article className="program-exercise" key={exercise.id}>
